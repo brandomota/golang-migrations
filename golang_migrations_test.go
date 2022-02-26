@@ -1,7 +1,11 @@
-package golangmigrations
+package main
 
 import (
 	"database/sql"
+	"github.com/brandomota/golang-migrations-example/models"
+	"github.com/brandomota/golang-migrations-example/services"
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
 	"testing"
@@ -9,13 +13,21 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/stretchr/testify/assert"
 )
 
 var conn *sql.DB
 
-func TestMigrations(t *testing.T) {
-	assert.Equal(t, true, true, "valor incorreto")
+func TestAddUserInDatabase(t *testing.T) {
+	var user models.User
+	user.Name = "nome teste"
+	user.Age = 1
+
+	userAdded, err := services.AddUser(user)
+	assert.Nil(t, err, "Erro deveria ser nulo")
+	assert.Equal(t, userAdded.Id, 1, "id  veio incorreto")
+	assert.Equal(t, userAdded.Name, user.Name, "id  veio incorreto")
+	assert.Equal(t, userAdded.Age, user.Age, "id  veio incorreto")
+
 }
 
 func initDB(m *testing.M) error {
@@ -42,6 +54,7 @@ func downDB(m *testing.M) {
 }
 
 func TestMain(m *testing.M) {
+	godotenv.Load()
 	err := initDB(m)
 	if err != nil {
 		downDB(m)
@@ -52,5 +65,4 @@ func TestMain(m *testing.M) {
 		downDB(m)
 		os.Exit(code)
 	}
-
 }
