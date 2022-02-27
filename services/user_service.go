@@ -20,3 +20,9 @@ func AddUser(user models.User) (models.User, error) {
 	}
 	return userAdded, nil
 }
+
+func GetUserById(id int) (models.User, error) {
+	var user models.User
+	err := repositories.GetUserByID(id, &user)
+	return user, err
+}

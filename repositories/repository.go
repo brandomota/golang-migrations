@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+// Return database instance
+func GetDBInstance() (*sql.DB, error) {
+	return getDB()
+}
+
 // Execute SQL Statement in database
 func ExecCreateEntity(query string) (int, error) {
 	var err error

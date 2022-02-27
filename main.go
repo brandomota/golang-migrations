@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	models "github.com/brandomota/golang-migrations-example/models"
 	services "github.com/brandomota/golang-migrations-example/services"
@@ -15,7 +17,7 @@ import (
 
 var logger = log.Default()
 
-func handlerCreateUser(w http.ResponseWriter, req *http.Request) {
+func handlerUsers(w http.ResponseWriter, req *http.Request) {
 	var msg = ""
 	switch req.Method {
 	case "POST":
@@ -44,6 +46,15 @@ func handlerCreateUser(w http.ResponseWriter, req *http.Request) {
 		json.NewEncoder(w).Encode(userCreated)
 	case "DELETE":
 		fmt.Println("2")
+	case "GET":
+		var stringId = req.URL.Path[:(strings.LastIndex(req.URL.Path, "/") + 1)]
+
+		id, err := strconv.ParseInt(stringId, 0, 32)
+		if err != nil {
+			msg = fmt.Sprintf(`Invalid id %d`, id)
+			http.Error(w, msg, http.StatusBadRequest)
+		}
+		//user, err := services.GetUser(id)
 	default:
 		msg = "Method not allowed"
 		logger.Print(msg)
@@ -52,12 +63,18 @@ func handlerCreateUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	err := godotenv.Load()
+	var err error
+	err = godotenv.Load()
 	if err != nil {
 		logger.Print("Error loading .env file")
 	}
+	logger.Print("Running migrations...")
+	err = services.RunMigrations()
+	if err != nil {
+		logger.Fatalln(fmt.Sprintf("error on running migrations : %s", err))
+	}
 	server := http.NewServeMux()
-	server.HandleFunc("/", handlerCreateUser)
+	server.HandleFunc("/users/", handlerUsers)
 	middleware := middlewares.NewLogger(server)
 	logger.Print("server running...")
 	http.ListenAndServe(":8000", middleware)
